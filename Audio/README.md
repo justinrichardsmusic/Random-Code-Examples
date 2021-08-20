@@ -108,7 +108,48 @@ Try to build and run your project, you should not get any errors and it should r
 Adding the Audio Listener and Audio Sources to your project
 -----------------------------------------------------------
 
-...to be added...
+So now we have a project that can link to SoLoud and compile.  Awesome.  Next we need to actually
+start using the Audio Listener and Sources (the whole point of going to this effort!)...
+
+Add the following files to your project:
+
+    cAudioListener.h
+    cAudioListener.cpp
+    cAudioSource.h
+    cAudioSource.cpp
+ 
+Below your inclusion of the PGE header in your main.cpp add the following includes:
+
+    #include "cAudioListener.h"
+    #include "cAudioSource.h"
+
+Great, now we can start using the AudioPGEXs.
+
+In your declarations section add an instance of a listener and a source:
+
+	cAudioListener AL;
+	cAudioSource AS;
+
+In your OnUserCreate function add the following initialisations:
+
+		AL.AudioSystemInit();
+		AS.AL = &AL;
+		AS.LoadAudioSample(0, "./assets/test.wav");
+
+(This assumes you have an assets folder with a wav file named "test.wav")
+(Also note, web based app paths are CASE SENSITIVE - test.wav != Test.wav)
+
+In the OnUserUpdate function add the following code:
+
+		// Input
+		if (GetKey(olc::Key::P).bPressed)
+        	AS.Play();
+
+Now compile and run... when you press the P key, your sound should play!
+
+Since we have the vs2019 desktop version working we can now move on to 
+getting our project setup to work with Emscripten in the browser also...
+
 
 Configuring Visual Studio for use with Emscripten and SoLoud
 ------------------------------------------------------------
@@ -153,9 +194,28 @@ The entire file should now contain the following:
 
     em++ -std=c++17 -O2 -s ALLOW_MEMORY_GROWTH=1 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 -s USE_LIBPNG=1 -s USE_SDL_MIXER=2 main.cpp soloud.o cAudioListener.cpp cAudioSource.cpp -o pge.html --preload-file ./assets
     
-This will be our compile command to use with emscripten.  Save the text document.
+This will be our compile command to use with emscripten.  Save the text document and continue.
 
 Compiling with Emscripten for Web
 ---------------------------------
 
+Go to your installion of Emscripten and run "emcmdprompt.bat". This will start a command prompt with the Emscripten environment
+variables set.
 
+Now navigate to your project folder in the command prompt window. Open the em_cmd_line.txt file created in the previous step and copy
+the text, then paste the command into the emcommand prompt and run. If all instructions were followed correctly you should hopefully 
+end up with a compiled version of your project that will work with Emscripten.
+
+You should see our output file in your project folder "pge.html" (along with some other files as well). Go back to your
+emcommandprompt and run your newly compiled project:
+
+    emrun pge.html
+    
+Your project should now be running inside your browser - happy days!
+
+That's it... If you got this far, congratulations :-)
+
+Note: Each time you make changes to your project in visual studio and want to run in the browser you will need to follow the steps
+in this section again from beginning to end.
+
+Enjoy...
