@@ -37,12 +37,16 @@ to be in your project directory in most situations so keep them separate for now
 Building a Backend
 ------------------
 
-In order to not have to include all of the SoLoud source files in our project we will need
+In order to NOT have to include all of the SoLoud source files in our project we will need
 to first build a backend (static library) to include instead.  This will make things much
 simpler in our project as we don't need to modify any of the SoLoud source code anyway.
 
 Open a command prompt (as admininstrator) and browse to the \build folder of the SoLoud
-installation.  Now run "Genie /?" to see a list of the various options you have for backends
+installation.  Now run 
+
+    Genie /?
+
+to see a list of the various options you have for backends
 etc...
 
 You can of course choose one that suits your needs, however I'm going to go with SDL2 as it
@@ -50,6 +54,8 @@ is the most common / tested backend available and it is cross platform and works
 web browser also.
 
 (If you don't have SDL2 installed you will need to download and install it somewhere first!)
+(Note: If you aren't intending on building for Emscripten then you can use MiniAudio which
+ doesn't require any additional downloads)
 
 Before running the Genie command you will need to first edit the genie.lua file to point to
 where you have your installation of SDL2. For example;
@@ -70,8 +76,10 @@ static version (right click the soloudStatic project and select Build).  You sho
 see a \lib folder in the main SoLoud directory. This will now contain the soloud_static.lib
 file.  This is the file that will be needed as a replacement for the SoLoud source code.
 
-Configuring Visual Studio
--------------------------
+(Note: x86 build confirmed working, x64 may not be compatible at this stage)
+
+Configuring Visual Studio for Desktop Use with SoLoud
+-----------------------------------------------------
 
 I happen to use Visual Studio on Windows, however these instructions can be adapted to suit
 other environments also.
@@ -97,4 +105,57 @@ You should now be setup for using SoLoud in your PGE project.
 Try to build and run your project, you should not get any errors and it should run at this point
 (although it won't do anything yet...)
 
-...more to come...
+Adding the Audio Listener and Audio Sources to your project
+-----------------------------------------------------------
+
+...to be added...
+
+Configuring Visual Studio for use with Emscripten and SoLoud
+------------------------------------------------------------
+
+In order to be able to compile with Emscripten and SoLoud in our project we will need to make
+a few changes.
+
+First of all, any additional include options we set previously will no longer be work.  So we
+will need to copy the headers inside the SoLoud \include folder into our project folder.
+
+We also need the soloud_static.lib file which should already be in the project folder (just
+mentioning it in case it isn't)
+
+Great, that's the first part done :-)
+
+Now we need to compile a ".o" file which contains the object symbols for the SoLoud header
+files which we can use at compile time with emscripten, instead of manually compiling all
+of the SoLoud headers every time we compile our program...
+
+MaGetzUb from the discord was gracious enough to provide a batch file which will do exactly
+this for us (Many Thanks!).
+
+Run the emcompile.bat file from the root folder in your SoLoud directory and it should
+hopefully produce a soloud.o file as a result.  The batch file is located in this repository.
+
+Now copy the soloud.o file into your project directory.
+
+Next step is to create a convenience text document in your project folder called
+"em_cmd_line.txt".  We will configure our compiler flags here to make it easier to compile
+later on.
+
+Add the following text to the file:
+
+    em++ -std=c++17 -O2 -s ALLOW_MEMORY_GROWTH=1 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 -s USE_LIBPNG=1 -s USE_SDL_MIXER=2
+    
+Next we need to add the files we wish to compile... assuming your main project file is called "main.cpp" we can use the following
+additional text:
+
+    main.cpp soloud.o cAudioListener.cpp cAudioSource.cpp -o pge.html --preload-file ./assets
+
+The entire file should now contain the following:
+
+    em++ -std=c++17 -O2 -s ALLOW_MEMORY_GROWTH=1 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 -s USE_LIBPNG=1 -s USE_SDL_MIXER=2 main.cpp soloud.o cAudioListener.cpp cAudioSource.cpp -o pge.html --preload-file ./assets
+    
+This will be our compile command to use with emscripten.  Save the text document.
+
+Compiling with Emscripten for Web
+---------------------------------
+
+
